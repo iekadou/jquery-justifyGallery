@@ -19,6 +19,7 @@
         this.options = $.extend({}, JustifyGallery.defaults, options);
         this.indexImages();
         this.justify();
+        this.registerLoadImages();
         this.registerWindowResize();
     };
 
@@ -172,6 +173,16 @@
         var self = this;
         $(window).resize(function () {
             self.justify();
+        });
+    };
+
+    JustifyGallery.prototype.registerLoadImages = function() {
+        var self = this;
+        self.$images.each(function() {
+            $(this).load(function() {
+                self.indexImages();
+                self.justify();
+            });
         });
     };
 
