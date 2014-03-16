@@ -5,6 +5,10 @@ A jQuery plugin to justify your Gallery.
 
 ## Demo
 
+### Demo of only [jquery-justifyGallery](https://github.com/iekadou/jquery-justifyGallery/)
+* http://www.noxic-action.de/page/programming/jquery-justifygallery/
+
+### Demo of [jquery-justifyGallery](https://github.com/iekadou/jquery-justifyGallery/) and [bootstrap-gallery](https://github.com/iekadou/bootstrap-gallery/)
 * http://www.noxic-action.de/page/photography/
 
 
