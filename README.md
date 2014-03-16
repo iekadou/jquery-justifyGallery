@@ -14,7 +14,7 @@ A jQuery plugin to justify your Gallery.
 
 ## Installation
 
-* Download the latest release: [v0.0.1](https://github.com/iekadou/jquery-justifyGallery/archive/0.0.1.zip)
+* Download the latest release: [v0.0.2](https://github.com/iekadou/jquery-justifyGallery/archive/0.0.2.zip)
 
 ## Usage
 
