@@ -1,5 +1,5 @@
 /*!
- * jquery-justifyGallery v0.0.1 by @iekadou
+ * jquery-justifyGallery v0.0.3 by @iekadou
  * Copyright (c) 2014 Jonas Braun
  *
  * http://www.noxic-action.de/page/programming/jquery-justifyGallery
@@ -18,9 +18,11 @@
         this.$gallery = $(element);
         this.$images = this.$gallery.find('img');
         this.options = $.extend({}, JustifyGallery.defaults, options);
-        this.registerLoadListeners();
-        this.indexImages();
-        this.justify();
+        if (!(this.options.hasOwnProperty('images') && Object.prototype.toString.call( options.images ) === '[object Array]')) {
+            this.registerLoadListeners();
+            this.indexImages();
+            this.justify();
+        }
         this.registerWindowResize();
     };
 
@@ -157,6 +159,26 @@
         self.$gallery.css('height', total_height);
     };
 
+    JustifyGallery.prototype.append = function(images) {
+        var self = this;
+        var img_string = "";
+        for (var i = 0; i < images.length; i++) {
+            img_string += '<a href="' + images[i].src + '"><img src="' + images[i].thumb_src + '"></a>';
+        }
+        var $images = $(img_string);
+        $images.appendTo(self.$gallery);
+        self.$images = self.$gallery.find('img');
+        self.registerLoadListeners();
+        self.indexImages();
+        self.justify();
+    };
+
+    JustifyGallery.prototype.replace = function(images) {
+        var self = this;
+        self.$gallery.html('');
+        self.append(images);
+    };
+
     JustifyGallery.prototype.registerWindowResize = function () {
         var self = this;
         $(window).resize(function () {
@@ -166,7 +188,7 @@
 
     JustifyGallery.prototype.registerLoadListeners = function() {
         var self = this;
-        self.$images.load(function() {
+        self.$gallery.load(function() {
             self.indexImages();
             self.justify();
         });
@@ -186,6 +208,20 @@
             var data = $(this).data('justifyGallery');
             if (!data) {
                 $(this).data('justifyGallery', (data = new JustifyGallery($(this), options)));
+                if (options.hasOwnProperty('images') && Object.prototype.toString.call( options.images ) === '[object Array]') {
+                    $(this).data('justifyGallery').replace(options.images);
+                }
+            } else {
+                if (options.hasOwnProperty('append') && options.append == true) {
+                    if (options.hasOwnProperty('images') && Object.prototype.toString.call( options.images ) === '[object Array]') {
+                        $(this).data('justifyGallery').append(options.images);
+                    }
+                }
+                else if (options.hasOwnProperty('replace') && options.replace == true) {
+                    if (options.hasOwnProperty('images') && Object.prototype.toString.call( options.images ) === '[object Array]') {
+                        $(this).data('justifyGallery').replace(options.images);
+                    }
+                }
             }
         });
     };
