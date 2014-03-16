@@ -16,10 +16,11 @@
 
     var JustifyGallery = function (element, options) {
         this.$gallery = $(element);
+        this.$images = this.$gallery.find('img');
         this.options = $.extend({}, JustifyGallery.defaults, options);
+        this.registerLoadListeners();
         this.indexImages();
         this.justify();
-        this.registerLoadImages();
         this.registerWindowResize();
     };
 
@@ -45,7 +46,6 @@
         var $body = $('body');
         var $gallery = self.$gallery;
         $gallery.css('position', 'relative');
-        self.$images = $gallery.find('img');
         self.imgCount = self.$images.length;
         if (self.$images.length == 0) {
             return;
@@ -65,6 +65,7 @@
             } else {
                 attrDict['parent'] = $parent;
                 attrDict['el'] = $img;
+                // retrieving real height using a clone
                 var $clone = $img.clone();
                 $clone.css(self.options.resizeCSS).appendTo($body);
                 attrDict['height'] = parseInt($clone.height());
@@ -113,6 +114,9 @@
                 cur_row_width = 0;
             }
         }
+        if (cur_row_starts_at < self.imgCount) {
+            rows.push({'start': cur_row_starts_at, 'end': (self.imgCount-1), 'width': inner_width});
+        }
 
         //styling rows
         for (var i = 0; i < rows.length; i++) {
@@ -123,13 +127,13 @@
             var per_img = parseInt(too_width / images_in_row);
             var last_img_correction = 0;
             var min_row_height = parseInt(self.options.maxRowHeight);
+            // setting position and width
             for (var img_i = rows[i]['start']; img_i <= rows[i]['end']; img_i++) {
 
                 if (img_i == rows[i]['end'] && images_in_row * per_img != too_width) {
                     last_img_correction = too_width - images_in_row * per_img;
                 }
                 var img_width = self.imageArray[img_i]['width']-per_img-last_img_correction;
-                last_img_correction = 0;
                 self.imageArray[img_i]['parent'].css({'top': top, 'left': left});
                 self.imageArray[img_i]['parent'].css('width', img_width);
                 left += img_width + self.options.spacing;
@@ -142,29 +146,13 @@
                     last_img_correction = 0;
                 }
             }
+            //setting height and vertical align middle
             for (var img_i = rows[i]['start']; img_i <= rows[i]['end']; img_i++) {
                 var img_height = self.imageArray[img_i]['el'].innerHeight();
 
                 self.imageArray[img_i]['parent'].css('height', min_row_height);
                 self.imageArray[img_i]['el'].css('top', parseInt((min_row_height - img_height)/2));
             }
-        }
-        var left_last = 0
-        var min_row_height = parseInt(self.options.maxRowHeight);
-        for (var i = rows[rows.length-1]['end']+1; i < self.imgCount; i++) {
-            self.imageArray[i]['parent'].css({'top': total_height, 'left': left_last, 'width': self.imageArray[i]['width']});
-            left_last += self.imageArray[img_i]['width'] + self.options.spacing;
-
-            var img_height = self.imageArray[i]['el'].innerHeight();
-            if (img_height < min_row_height) {
-                min_row_height = img_height;
-            }
-            if (i == (self.imgCount -1)) {
-                total_height += parseInt(min_row_height);
-            }
-        }
-        for (var i = rows[rows.length-1]['end']+1; i < self.imgCount; i++) {
-            self.imageArray[i]['parent'].css('height', min_row_height);
         }
         self.$gallery.css('height', total_height);
     };
@@ -176,13 +164,15 @@
         });
     };
 
-    JustifyGallery.prototype.registerLoadImages = function() {
+    JustifyGallery.prototype.registerLoadListeners = function() {
         var self = this;
-        self.$images.each(function() {
-            $(this).load(function() {
-                self.indexImages();
-                self.justify();
-            });
+        self.$images.load(function() {
+            self.indexImages();
+            self.justify();
+        });
+        $(window).load(function() {
+            self.indexImages();
+            self.justify();
         });
     };
 
