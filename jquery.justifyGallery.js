@@ -1,5 +1,5 @@
 /*!
- * jquery-justifyGallery v0.0.3 by @iekadou
+ * jquery-justifyGallery v0.0.4 by @iekadou
  * Copyright (c) 2014 Jonas Braun
  *
  * http://www.noxic-action.de/page/programming/jquery-justifyGallery
@@ -18,11 +18,12 @@
         this.$gallery = $(element);
         this.$images = this.$gallery.find('img');
         this.options = $.extend({}, JustifyGallery.defaults, options);
-        if (!(this.options.hasOwnProperty('images') && Object.prototype.toString.call( options.images ) === '[object Array]')) {
+        if (!(this.options.hasOwnProperty('images') && Object.prototype.toString.call( this.options.images ) === '[object Array]')) {
             this.registerLoadListeners();
-            this.indexImages();
-            this.justify();
         }
+        this.justifyCompleted = false;
+        this.currentRefreshCount = 0;
+        this.refresh();
         this.registerWindowResize();
     };
 
@@ -32,6 +33,8 @@
     JustifyGallery.defaults = {
         'maxRowHeight': '300px',
         'spacing': 2,
+        'refreshInterval': 500,
+        'maxRefreshCount': 10,
         'resizeCSS': {'min-width': '0',
                       'min-height': '0',
                       'height': 'auto',
@@ -42,6 +45,20 @@
 
     // JUSTIFYGALLERY METHODS
     // ========================
+
+    JustifyGallery.prototype.append = function(images) {
+        var self = this;
+        var img_string = "";
+        for (var i = 0; i < images.length; i++) {
+            img_string += '<a href="' + images[i].src + '"><img src="' + images[i].thumb_src + '"></a>';
+        }
+        var $images = $(img_string);
+        $images.appendTo(self.$gallery);
+        self.$images = self.$gallery.find('img');
+        self.registerLoadListeners();
+        self.indexImages();
+        self.justify();
+    };
 
     JustifyGallery.prototype.indexImages = function () {
         var self = this;
@@ -159,24 +176,28 @@
         self.$gallery.css('height', total_height);
     };
 
-    JustifyGallery.prototype.append = function(images) {
+    JustifyGallery.prototype.refresh = function() {
         var self = this;
-        var img_string = "";
-        for (var i = 0; i < images.length; i++) {
-            img_string += '<a href="' + images[i].src + '"><img src="' + images[i].thumb_src + '"></a>';
-        }
-        var $images = $(img_string);
-        $images.appendTo(self.$gallery);
-        self.$images = self.$gallery.find('img');
-        self.registerLoadListeners();
         self.indexImages();
         self.justify();
+        if (self.currentRefreshCount < self.options.maxRefreshCount && !self.justifyCompleted) {
+            setTimeout(function() { self.refresh(); }, self.options.refreshInterval);
+        } else {
+            self.currentRefreshCount++;
+        }
     };
 
-    JustifyGallery.prototype.replace = function(images) {
+    JustifyGallery.prototype.registerLoadListeners = function() {
         var self = this;
-        self.$gallery.html('');
-        self.append(images);
+        self.$gallery.load(function() {
+            self.justifyCompleted = true;
+            self.indexImages();
+            self.justify();
+        });
+        $(window).load(function() {
+            self.indexImages();
+            self.justify();
+        });
     };
 
     JustifyGallery.prototype.registerWindowResize = function () {
@@ -186,16 +207,10 @@
         });
     };
 
-    JustifyGallery.prototype.registerLoadListeners = function() {
+    JustifyGallery.prototype.replace = function(images) {
         var self = this;
-        self.$gallery.load(function() {
-            self.indexImages();
-            self.justify();
-        });
-        $(window).load(function() {
-            self.indexImages();
-            self.justify();
-        });
+        self.$gallery.html('');
+        self.append(images);
     };
 
     // JUSTIFYGALLERY PLUGIN DEFINITION
@@ -208,16 +223,16 @@
             var data = $(this).data('justifyGallery');
             if (!data) {
                 $(this).data('justifyGallery', (data = new JustifyGallery($(this), options)));
-                if (options.hasOwnProperty('images') && Object.prototype.toString.call( options.images ) === '[object Array]') {
+                if (typeof options != "undefined" && options.hasOwnProperty('images') && Object.prototype.toString.call( options.images ) === '[object Array]') {
                     $(this).data('justifyGallery').replace(options.images);
                 }
             } else {
-                if (options.hasOwnProperty('append') && options.append == true) {
+                if (typeof options != "undefined" && options.hasOwnProperty('append') && options.append == true) {
                     if (options.hasOwnProperty('images') && Object.prototype.toString.call( options.images ) === '[object Array]') {
                         $(this).data('justifyGallery').append(options.images);
                     }
                 }
-                else if (options.hasOwnProperty('replace') && options.replace == true) {
+                else if (typeof options != "undefined" && options.hasOwnProperty('replace') && options.replace == true) {
                     if (options.hasOwnProperty('images') && Object.prototype.toString.call( options.images ) === '[object Array]') {
                         $(this).data('justifyGallery').replace(options.images);
                     }
